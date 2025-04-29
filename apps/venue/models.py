@@ -1,7 +1,9 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.text import slugify
 
 from apps.venue.constants import FoodType, VenueBookingStatus, BookingStatus
@@ -142,6 +144,15 @@ class BookingModel(models.Model):
             except:
                 return f"{self.user.username} - Booking"
         return f"{self.venue.name} - Booking"
+
+    def clean(self):
+        if self.booked_for and self.booked_for < timezone.now().date():
+            raise ValidationError("Booking date must be in the future.")
+
+    def save(self, *args, **kwargs):
+        if self.booked_for and self.booked_for < timezone.now().date():
+            self.status = BookingStatus.COMPLETED
+        super().save(*args, **kwargs)
 
 
 class KhaltiTransaction(models.Model):

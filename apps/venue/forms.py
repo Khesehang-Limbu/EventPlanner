@@ -19,16 +19,16 @@ class BookingForm(forms.ModelForm):
         venue = cleaned_data.get('venue')
         booked_for = cleaned_data.get('booked_for')
 
-        # Validate booked_for is in the future
         if booked_for and booked_for < timezone.now().date():
-            self.add_error('booked_for', "Booking date must be in the future.")
+            if not self.instance.pk:
+                self.add_error('booked_for', "Booking date must be in the future.")
+            else:
+               cleaned_data['status'] = BookingStatus.COMPLETED
 
-        # Validate venue capacity
         if venue and total_people:
             if total_people > venue.capacity:
                 self.add_error('total_people', f"The venue can only accommodate up to {venue.capacity} people.")
 
-        # Check for existing bookings
         if venue and booked_for:
             is_booked = BookingModel.objects.filter(
                 venue=venue,
