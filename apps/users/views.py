@@ -38,7 +38,7 @@ class UserBookingView(LoginRequiredMixin, ListView):
     context_object_name = "bookings"
 
     def get_queryset(self):
-        return BookingModel.objects.filter(user=self.request.user).order_by('-booked_at')
+        return BookingModel.objects.filter(user=self.request.user, is_paid=True).order_by('-booked_at')
 
 class UserRecentVenuesView(LoginRequiredMixin, ListView):
     template_name = 'users/user_recent_venues.html'
