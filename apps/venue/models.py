@@ -9,6 +9,7 @@ from apps.venue.constants import FoodType, VenueBookingStatus, BookingStatus
 # Create your models here.
 User = get_user_model()
 
+
 class AbstractSlugModel(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True, null=True, blank=True)
@@ -86,6 +87,7 @@ class VenueModel(AbstractSlugModel):
         else:
             return 0
 
+
 class VenueRatingModel(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True)
     venue = models.ForeignKey(VenueModel, on_delete=models.SET_NULL, null=True, related_name="ratings")
@@ -109,6 +111,7 @@ class VenueImages(models.Model):
     def __str__(self):
         return f"{self.venue.name} - Image"
 
+
 class BookingModel(models.Model):
     venue = models.ForeignKey(VenueModel, on_delete=models.SET_NULL, null=True, related_name="venue_bookings")
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="bookings")
@@ -117,7 +120,8 @@ class BookingModel(models.Model):
     booked_at = models.DateField(auto_now_add=True)
     is_paid = models.BooleanField(default=False)
     booked_for = models.DateField(null=True, blank=True)
-    status = models.CharField(max_length=25, choices=BookingStatus.choices, default=BookingStatus.ONGOING, null=True, blank=True)
+    status = models.CharField(max_length=25, choices=BookingStatus.choices, default=BookingStatus.ONGOING, null=True,
+                              blank=True)
 
     @property
     def get_total_payment_amount(self):
@@ -138,3 +142,22 @@ class BookingModel(models.Model):
             except:
                 return f"{self.user.username} - Booking"
         return f"{self.venue.name} - Booking"
+
+
+class KhaltiTransaction(models.Model):
+    booking = models.ForeignKey(to=BookingModel, on_delete=models.CASCADE)
+    user = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, related_name="transactions")
+
+    pidx = models.CharField(max_length=100, unique=True)
+    transaction_id = models.CharField(max_length=100)
+    tidx = models.CharField(max_length=100)
+    txn_id = models.CharField(max_length=100)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20)
+    purchase_order_id = models.IntegerField()
+    purchase_order_name = models.CharField(max_length=255)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"KhaltiTransaction {self.pidx} - {self.status}"

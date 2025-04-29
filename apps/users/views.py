@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.views.generic import UpdateView, ListView
 
 from apps.users.forms import UserProfileForm
-from apps.venue.models import BookingModel, VenueModel, VenueRatingModel
+from apps.venue.models import BookingModel, VenueModel, VenueRatingModel, KhaltiTransaction
 
 
 class UserProfileView(LoginRequiredMixin, UpdateView):
@@ -65,4 +65,15 @@ class UserRecentVenuesView(LoginRequiredMixin, ListView):
             "success": True,
         })
 
+class RecentTransactionView(LoginRequiredMixin, ListView):
+    template_name = 'users/user_recent_transactions.html'
 
+    def get_queryset(self):
+        return KhaltiTransaction.objects.filter(user=self.request.user).order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            "recent_transactions": self.get_queryset(),
+        })
+        return context

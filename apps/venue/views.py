@@ -10,7 +10,7 @@ from django.views.generic import DetailView, TemplateView
 
 from apps.venue.constants import VenueBookingStatus, BookingStatus
 from apps.venue.forms import BookingForm
-from apps.venue.models import City, VenueModel, BookingModel
+from apps.venue.models import City, VenueModel, BookingModel, KhaltiTransaction
 import json
 
 
@@ -157,3 +157,30 @@ class PayBookingView(LoginRequiredMixin, View):
 
 class PaymentSuccessView(LoginRequiredMixin, TemplateView):
     template_name = 'venue/payment_success.html'
+
+    def get(self, request, *args, **kwargs):
+        context = super().get_context_data(**kwargs)
+        pidx = request.GET.get('pidx')
+        if pidx:
+            transaction_id = request.GET.get('transaction_id')
+            if not KhaltiTransaction.objects.filter(transaction_id=transaction_id).exists():
+                tidx = request.GET.get('tidx')
+                txn_id = request.GET.get('txnId')
+                total_amount = request.GET.get('total_amount')
+                status = request.GET.get('status')
+                purchase_order_id = request.GET.get('purchase_order_id')
+                purchase_order_name = request.GET.get('purchase_order_name')
+
+                KhaltiTransaction.objects.create(
+                    booking_id=purchase_order_id,
+                    user=request.user,
+                    transaction_id=transaction_id,
+                    pidx=pidx,
+                    tidx=tidx,
+                    txn_id=txn_id,
+                    total_amount=total_amount,
+                    status=status,
+                    purchase_order_id=purchase_order_id,
+                    purchase_order_name=purchase_order_name,
+                )
+        return self.render_to_response(context)
